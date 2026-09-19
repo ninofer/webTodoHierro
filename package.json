@@ -1,0 +1,26 @@
+{
+  "name": "todohierro-web",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Portal web de consulta de precios, stock y reportes sobre el sistema de Todo Hierro",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "packages/shared",
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "build": "npm run build -w @todohierro/shared && npm run build -w @todohierro/api && npm run build -w @todohierro/web",
+    "build:shared": "npm run build -w @todohierro/shared",
+    "build:api": "npm run build -w @todohierro/api",
+    "build:web": "npm run build -w @todohierro/web",
+    "dev:api": "npm run start:dev -w @todohierro/api",
+    "dev:web": "npm run dev -w @todohierro/web",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}

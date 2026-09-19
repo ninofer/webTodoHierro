@@ -1,0 +1,22 @@
+{
+  /*
+    tsconfig propio para las pruebas.
+
+    No se le agregan `paths` al tsconfig del API porque ese se usa para compilar,
+    con rootDir en src: resolver shared desde su fuente haría que `nest build`
+    intentara emitir archivos de otro paquete dentro de dist.
+  */
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../..",
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "baseUrl": ".",
+    "paths": {
+      "@todohierro/shared": ["../../packages/shared/src/index.ts"]
+    },
+    "types": ["node", "jest"]
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts", "../../packages/shared/src/**/*.ts"]
+}

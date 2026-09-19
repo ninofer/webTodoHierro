@@ -1,0 +1,22 @@
+node_modules/
+dist/
+build/
+logs/
+*.log
+
+.env
+.env.*
+!.env.ejemplo
+
+*.pfx
+*.pem
+*.key
+usuarios.json
+
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Artefactos incrementales de tsc
+*.tsbuildinfo

@@ -1,0 +1,12 @@
+{
+  "name": "@todohierro/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reglas que deciden la pantalla y el servidor. TypeScript puro, sin dependencias.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
+}
