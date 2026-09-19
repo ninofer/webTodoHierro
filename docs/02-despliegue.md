@@ -84,8 +84,14 @@ cd C:\todohierro
 .\scripts\publicar.ps1 -Mensaje "qué se está publicando"
 ```
 
-El script hace `git pull --ff-only`, `npm ci`, corre las pruebas y **aborta si
-alguna falla**. Recién entonces compila en el orden `shared → api → web`, repone
+**Publicar implica unos minutos de caída.** El script detiene el API antes de
+instalar dependencias, porque `npm ci` borra `node_modules` entero y Windows no
+deja borrar un módulo nativo que un proceso tiene cargado — `argon2`, en este
+caso. El 19/09/2026 una publicación falló con `EPERM: operation not permitted,
+unlink argon2.glibc.node` justamente por eso.
+
+El script hace `git pull --ff-only`, detiene el API, `npm ci`, corre las pruebas y
+**aborta si alguna falla**. Recién entonces compila en el orden `shared → api → web`, repone
 el `web.config` en `apps\web\dist` —que `git pull` no trae, porque `dist` está
 ignorado— y reinicia el API con `--update-env`.
 
@@ -95,6 +101,13 @@ que no avisa.
 
 Cada publicación queda anotada en `logs\publicaciones.log` con fecha, commit y
 mensaje.
+
+Dos detalles del script que existen por errores concretos: cada comando externo
+se corre a través de `Ejecutar`, que comprueba el código de salida —
+`$ErrorActionPreference = 'Stop'` no aplica a comandos externos, y una vez el
+script siguió compilando con `node_modules` a medio instalar—; y jest se invoca
+por su ruta y no con `npx`, porque si `npx` no lo encuentra se pone a descargarlo
+y pregunta por teclado, colgando el despliegue para siempre.
 
 ## Lo que se olvida y cuesta caro
 
