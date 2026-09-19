@@ -61,6 +61,12 @@ npm run build:web
 Paso 'Configuracion de IIS'
 Copy-Item 'deploy\web.config' 'apps\web\dist\web.config' -Force
 
+# logs/ esta en .gitignore, asi que el clone no la crea. Tiene que existir ANTES
+# de arrancar pm2: si no, pm2 no puede escribir su log y el proceso queda vivo
+# pero mudo, que es la peor combinacion para diagnosticar cualquier cosa.
+Paso 'Carpeta de logs'
+New-Item -ItemType Directory -Force -Path 'logs' | Out-Null
+
 Paso 'Reiniciando el API'
 pm2 restart todohierro-api --update-env
 if ($LASTEXITCODE -ne 0) {
@@ -69,7 +75,6 @@ if ($LASTEXITCODE -ne 0) {
     pm2 save
 }
 
-New-Item -ItemType Directory -Force -Path 'logs' | Out-Null
 "[{0:yyyy-MM-dd HH:mm}] {1} - {2}" -f (Get-Date), $commit, $Mensaje |
     Add-Content 'logs\publicaciones.log'
 
