@@ -91,7 +91,7 @@ export function Articulos() {
 
       {articulos.length === 0 && !consulta.isFetching && !consulta.isError && (
         <p className="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
-          Sin resultados
+          Sin resultados. Probá con menos letras, o con el código del artículo.
         </p>
       )}
 

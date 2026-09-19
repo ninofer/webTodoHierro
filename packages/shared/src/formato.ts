@@ -38,3 +38,20 @@ export function formatearAntiguedad(segundos: number): string {
   const horas = Math.floor(minutos / 60);
   return 'hace ' + horas + ' h';
 }
+
+const PESO = new Intl.NumberFormat('es-PY', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/**
+ * Peso del artículo, en kilos.
+ *
+ * La columna es `numeric(5)` y está en cero para la mayoría de los artículos:
+ * sólo los perfiles y chapas lo tienen cargado. Devuelve cadena vacía cuando no
+ * hay dato, para que la pantalla pueda omitirlo en vez de mostrar "0,00 kg".
+ */
+export function formatearPeso(kilos: number): string {
+  if (!Number.isFinite(kilos) || kilos <= 0) return '';
+  return PESO.format(kilos) + ' kg';
+}

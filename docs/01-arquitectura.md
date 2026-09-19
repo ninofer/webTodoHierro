@@ -138,6 +138,33 @@ una inyección de manual. **Ese patrón no se porta.**
 Dato para el diseño: sólo 141 de 1.435 productos tienen código de barras cargado.
 No sirve como campo de búsqueda principal.
 
+### Lo que del formulario original NO se porta, y por qué
+
+**El panel de stock por sucursal.** El formulario lo llama con
+`exec sp_stockSucursales <idSucursal>,<idProducto>`, pero el procedimiento en la
+base se llama `sp_stcokSucursales` —con la `c` y la `o` cambiadas de lugar—, así
+que ese panel **nunca funcionó**: el `exec` falla, el `Try/Catch` se lo traga y el
+panel queda vacío. Nadie se enteró en años, porque la única prueba posible era
+alguien mirando la pantalla.
+
+Aun arreglado, no aporta nada acá. Verificado el 19/09/2026: Todo Hierro tiene una
+sola sucursal, un solo depósito (`DEPOSITO TODOHIERRO`), las 1.438 filas de `stock`
+están ahí, y **cero productos** tienen existencias en más de un depósito. Además el
+procedimiento devuelve el stock de las *otras* sucursales (`WHERE d.idSucursal <>
+@idSucursal`), que para un cliente de una sola sucursal es siempre vacío.
+
+Si algún día abren una segunda sucursal, se publica `web.vw_stock_sucursal` y la
+tarjeta se despliega. No antes.
+
+**La decodificación del código de barras interno.** El formulario reconoce códigos
+de 12 y 13 dígitos que empiezan con 1 y les extrae el `idProducto` por posición.
+Tiene sentido con una pistola lectora en el mostrador; en un celular nadie tipea
+trece dígitos. Si más adelante se quiere leer códigos desde el teléfono, el camino
+es la cámara, no el teclado.
+
+**El `IdProducto` en la lista.** Es una clave interna. El usuario busca por código
+o por nombre, y el id no le dice nada.
+
 ## 8. Decisiones tomadas y por qué
 
 | Decisión | Alternativa descartada | Por qué |
