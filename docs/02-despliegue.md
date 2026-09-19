@@ -16,13 +16,32 @@ En pc-servicios: Node 20 o superior, pm2 global, IIS con **URL Rewrite** y
 **Application Request Routing** (con el proxy habilitado en la configuración del
 servidor, que es un tilde aparte y se olvida).
 
+## Las dos carpetas
+
+| Máquina | Carpeta | Para qué |
+|---|---|---|
+| NINOFERHP | `C:\Fuentes\IA\webTodoHierro` | Desarrollo. Desde acá se empuja a GitHub. |
+| pc-servicios | `C:\todohierro` | Clon del repositorio. Acá se hace `git pull`, se compila y corre pm2. |
+
+Son dos clones del mismo repositorio. **No se copian archivos entre ellas**: lo
+que viaja es el commit.
+
+En `C:\todohierro` conviven cosas que no están en el repositorio y que `git pull`
+no pisa, porque están en el `.gitignore`: el `.env`, el `usuarios.json` y `logs/`.
+
+Como se compila en el servidor, pc-servicios necesita las dependencias de
+desarrollo (TypeScript, la CLI de Nest, Vite). Por eso `npm ci` completo y no
+`--omit=dev`.
+
 ## Primera instalación
 
-1. Crear `C:\todohierro` y `C:\todohierro\logs`.
-2. Copiar `apps/api/.env.ejemplo` a `C:\todohierro\.env` y completarlo. La
+**▶ EN PC-SERVICIOS**
+
+1. `git clone https://github.com/ninofer/webTodoHierro.git C:\todohierro`
+2. Copiar `apps\api\.env.ejemplo` a `C:\todohierro\.env` y completarlo. La
    contraseña de `web_ro` y el `JWT_SECRETO` se escriben ahí, a mano.
-3. Publicar con `.\scripts\publicar.ps1 -Mensaje "primera instalación"`.
-4. Crear el primer usuario: `node deploy/crear-usuario.js` desde `C:\todohierro`.
+3. `.\scripts\publicar.ps1 -Mensaje "primera instalación"`
+4. Crear el primer usuario: `node deploy\crear-usuario.js`
 5. Apuntar el sitio de IIS a `C:\todohierro\apps\web\dist` y confirmar que quedó
    el `web.config` ahí.
 6. `pm2 save` — sin esto, el próximo reinicio no levanta el API.
@@ -50,12 +69,32 @@ ese archivo dice si el problema fue el arranque o el proceso.
 
 ## Publicaciones siguientes
 
+Se empuja desde NINOFERHP y se publica desde pc-servicios.
+
+**▶ EN NINOFERHP**
+
 ```powershell
+git push
+```
+
+**▶ EN PC-SERVICIOS**
+
+```powershell
+cd C:\todohierro
 .\scripts\publicar.ps1 -Mensaje "qué se está publicando"
 ```
 
-Corre las pruebas primero y aborta si alguna falla. Después compila en el orden
-`shared → api → web`, copia, instala dependencias de producción y reinicia.
+El script hace `git pull --ff-only`, `npm ci`, corre las pruebas y **aborta si
+alguna falla**. Recién entonces compila en el orden `shared → api → web`, repone
+el `web.config` en `apps\web\dist` —que `git pull` no trae, porque `dist` está
+ignorado— y reinicia el API con `--update-env`.
+
+Antes de todo eso comprueba que está parado en el repositorio correcto y que
+existe el `.env`. Un script correcto corrido en la carpeta equivocada es un error
+que no avisa.
+
+Cada publicación queda anotada en `logs\publicaciones.log` con fecha, commit y
+mensaje.
 
 ## Lo que se olvida y cuesta caro
 
