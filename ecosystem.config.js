@@ -7,12 +7,18 @@
  * Si se agrega o saca un proceso de esta lista, hay que volver a hacer
  * `pm2 save`. Si no, el próximo reinicio restaura la lista anterior — y no avisa.
  */
+const path = require('node:path');
+
 module.exports = {
   apps: [
     {
       name: 'todohierro-api',
       script: 'apps/api/dist/main.js',
-      cwd: 'C:\\todohierro',
+      // __dirname es la carpeta donde vive este archivo, o sea la raíz del
+      // proyecto. Así sirve sin importar dónde esté clonado el repositorio —
+      // antes tenía "C:\\todohierro" fijo, válido sólo en la instalación
+      // anterior sobre Windows/IIS.
+      cwd: __dirname,
 
       /*
         Una sola instancia, en modo fork, a propósito.
@@ -28,8 +34,8 @@ module.exports = {
 
       max_memory_restart: '1G',
 
-      out_file: 'C:\\todohierro\\logs\\api-out.log',
-      error_file: 'C:\\todohierro\\logs\\api-error.log',
+      out_file: path.join(__dirname, 'logs', 'api-out.log'),
+      error_file: path.join(__dirname, 'logs', 'api-error.log'),
       time: true,
 
       env: {

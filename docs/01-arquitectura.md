@@ -20,16 +20,19 @@ endurecer más de lo que están.
 ## 2. La topología
 
 ```
-Celular ─▶ Cloudflare (WAF + TLS) ─▶ IIS en pc-servicios ─▶ API Node (127.0.0.1)
-                                                                   │
-                                                            Mikrotik (OpenVPN)
-                                                                   │
-                                                      SQL Server 2008 R2 (Encarnación)
+Celular ─▶ Cloudflare (WAF) ─▶ nginx en pc-servicios (Ubuntu) ─▶ API Node (127.0.0.1)
+                                                                        │
+                                                                 Mikrotik (OpenVPN)
+                                                                        │
+                                                           SQL Server 2008 R2 (Encarnación)
 ```
 
-- **Cloudflare** termina el TLS público, aplica WAF y límite de tasa.
-- **IIS** sirve `apps/web/dist` y hace proxy inverso de `/api` al proceso Node.
-- **El API** escucha sólo en `127.0.0.1`: nadie de la red puede saltear IIS.
+- **Cloudflare** aplica WAF y límite de tasa delante de todo.
+- **nginx**, en pc-servicios (Ubuntu), termina el TLS público con un certificado
+  de Let's Encrypt (certbot), sirve `apps/web/dist` y hace proxy inverso de
+  `/api` al proceso Node. Reemplaza a IIS de la instalación original sobre
+  Windows Server.
+- **El API** escucha sólo en `127.0.0.1`: nadie de la red puede saltear nginx.
 - **El Mikrotik** termina la VPN. `pc-servicios` no tiene cliente VPN instalado,
   sólo una ruta.
 - **El servidor de Todo Hierro** es un cliente más de esa VPN: sale hacia

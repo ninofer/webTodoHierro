@@ -1,5 +1,10 @@
 @echo off
 REM ---------------------------------------------------------------------------
+REM  OBSOLETO desde el 22/09/2026: pc-servicios pasa de Windows a Ubuntu. Ahí
+REM  el arranque automatico lo resuelve "pm2 startup systemd" (genera un
+REM  servicio real), sin tarea programada ni script propio. Ver
+REM  docs/02-despliegue.md. Este archivo queda como referencia historica.
+REM ---------------------------------------------------------------------------
 REM  Arranque de pm2 al encender pc-servicios.
 REM
 REM  Lo dispara una tarea programada con el desencadenador "Al iniciar el equipo"

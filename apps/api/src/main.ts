@@ -17,13 +17,13 @@ async function arrancar(): Promise<void> {
   /*
     Sin esto, el freno del login bloquea el portal entero.
 
-    Detrás de IIS todas las peticiones llegan desde 127.0.0.1, así que req.ip
+    Detrás de nginx todas las peticiones llegan desde 127.0.0.1, así que req.ip
     sería la misma para todos los usuarios: al quinto intento fallido de
     cualquiera, el login queda cerrado quince minutos para todo el mundo.
 
     Se confía sólo en loopback. Como el API no escucha en ninguna otra interfaz,
-    la única fuente posible de X-Forwarded-For es IIS, y nadie puede falsificarla
-    desde afuera.
+    la única fuente posible de X-Forwarded-For es nginx, y nadie puede
+    falsificarla desde afuera.
   */
   app.set('trust proxy', 'loopback');
 
@@ -39,9 +39,9 @@ async function arrancar(): Promise<void> {
     }),
   );
 
-  // 127.0.0.1 en producción. IIS es el único camino hacia el API: si esto
+  // 127.0.0.1 en producción. nginx es el único camino hacia el API: si esto
   // escucha en 0.0.0.0, cualquiera en la red le habla directo y saltea el HTTPS,
-  // el WAF y todo lo que IIS hace adelante.
+  // el WAF y todo lo que nginx hace adelante.
   await app.listen(config.puerto, config.host);
 
   new Logger('arranque').log(

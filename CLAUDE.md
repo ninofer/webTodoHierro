@@ -85,10 +85,10 @@ que explica de dónde salió cada regla.
 - **Orden de compilación, no negociable**: `shared` → `api` → `web`.
 - Base del cliente: `todoHierro`, SQL Server 2008 R2 sobre Windows Server 2012 R2
   en Encarnación, alcanzada por OpenVPN terminada en el Mikrotik.
-- Producción: pm2 (`todohierro-api`, **una sola instancia** — el worker de caché
-  corre dentro del proceso) detrás de IIS. Tras tocar `.env`:
-  `pm2 restart todohierro-api --update-env`.
-- **El API escucha en `127.0.0.1`.** IIS es el único camino hacia él.
+- Producción: pc-servicios corre Ubuntu. pm2 (`todohierro-api`, **una sola
+  instancia** — el worker de caché corre dentro del proceso) detrás de nginx.
+  Tras tocar `.env`: `pm2 restart todohierro-api --update-env`.
+- **El API escucha en `127.0.0.1`.** nginx es el único camino hacia él.
 - `NODE_OPTIONS=--tls-min-v1.0`, porque SQL Server 2008 R2 cifra el login con
   TLS 1.0 y Node 20+ lo rechaza. Baja el mínimo de TLS de todo el proceso: si
   mañana el API llama servicios externos, tenerlo presente.

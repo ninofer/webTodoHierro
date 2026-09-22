@@ -1,4 +1,9 @@
 <#
+    OBSOLETO desde el 22/09/2026: pc-servicios pasa de Windows a Ubuntu. El
+    equivalente vivo es scripts/publicar.sh. Este archivo queda como
+    referencia historica (y por si alguna vez se publica desde una máquina
+    Windows), pero no es lo que corre en producción.
+
     Publica el portal. SE CORRE EN PC-SERVICIOS, dentro del clon del repositorio.
 
         .\scripts\publicar.ps1 -Mensaje "que se esta publicando"

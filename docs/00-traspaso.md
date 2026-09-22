@@ -5,7 +5,12 @@ conversaciones previas. Dice qué es, en qué estado está, qué falta y qué er
 ya pagamos.
 
 Estado al 19/09/2026: **el API funciona en producción contra los datos reales del
-cliente.** Falta publicarlo por IIS para que se vea desde internet.
+cliente.** Falta publicarlo para que se vea desde internet.
+
+Decisión del 22/09/2026: **pc-servicios se instala sobre Ubuntu**, no Windows.
+Adelante va nginx (no IIS) y el arranque automático de pm2 se resuelve con
+`pm2 startup systemd`, sin tarea programada. El resto — pm2, la VPN al
+Mikrotik, el esquema `web`, la caché — no cambia.
 
 ---
 
@@ -41,7 +46,7 @@ máquinas no se pueden endurecer más de lo que están.
 | Máquina | Qué es | Carpeta | Se toca |
 |---|---|---|---|
 | **NINOFERHP** | La máquina de desarrollo | `C:\Fuentes\IA\webTodoHierro` | Sí |
-| **pc-servicios** | Servidor de aplicación, en el cluster Proxmox de TREEKINGS | `C:\todohierro` | Sí |
+| **pc-servicios** | Servidor de aplicación (Ubuntu), en el cluster Proxmox de TREEKINGS | `~/todohierro` (por SSH, no hay escritorio) | Sí |
 | **SRVTodoHierro** | La PC del cliente, con el SQL y el sistema VB | — | **No** |
 
 `NINOFERHP` y `pc-servicios` son **dos clones del mismo repositorio**. No se
@@ -52,7 +57,7 @@ Repositorio: `github.com/ninofer/webTodoHierro` (privado).
 ## 4. Cómo llega el API a la base
 
 ```
-Celular ─▶ Cloudflare ─▶ IIS en pc-servicios ─▶ API Node (127.0.0.1:3001)
+Celular ─▶ Cloudflare ─▶ nginx en pc-servicios ─▶ API Node (127.0.0.1:3001)
                                                         │
                                                  Mikrotik (servidor OpenVPN)
                                                         │
@@ -67,6 +72,12 @@ La regla del Mikrotik es la que sostiene el modelo de seguridad:
 
 > TCP 1433, con estado, **origen 172.25.1.14** (pc-servicios) → **destino
 > 192.168.88.4**. Y nada iniciado desde el lado del cliente hacia el cluster.
+
+**Si pc-servicios se recrea como una VM Ubuntu nueva, esa IP cambia.** Hay que
+actualizar el origen de esta regla en el Mikrotik con la IP de la VM nueva
+*antes* de dar por terminada la migración — si no, el API arranca, pero
+`SqlService` no puede conectar nunca y `/api/salud` queda en `ok: false` sin
+que el motivo salte a la vista (el timeout de conexión tarda en avisar).
 
 ## 5. La frontera en la base
 
@@ -106,18 +117,20 @@ lanzar, debe registrar el problema, dejar el padrón vacío, rechazar los login 
 un mensaje claro e informarlo en `/api/salud`. Hay que escribir la guarda y
 romperla a propósito, como manda el método.
 
-**2. Publicar por IIS.** Es lo único que separa al portal de estar en línea.
-Falta: crear el sitio apuntando a `C:\todohierro\apps\web\dist`, con el
-`web.config` que ya está en `deploy/`; el binding con hostname propio (se pensó
-`todohierro.emiliomuller.com`); confirmar que **ARR tiene el proxy habilitado**
-—es un tilde aparte y se olvida—; y el registro DNS. **Pendiente de definir**: cómo
-llega hoy el tráfico de internet a `netjoin` en esa misma máquina, para copiar ese
-mecanismo. El dominio `emiliomuller.com` está en Hostinger.
+**2. Publicar por nginx, en Ubuntu.** Es lo único que separa al portal de estar
+en línea. `pc-servicios` deja de ser Windows/IIS: la instalación pasa a
+Ubuntu con nginx como reverse proxy (`deploy/nginx-todohierro.conf`) y
+certificado propio con certbot/Let's Encrypt. Falta: levantar la VM, el
+`server_name` con hostname propio (se pensó `todohierro.emiliomuller.com`), el
+registro DNS apuntando a la IP nueva, correr `certbot --nginx`, y **actualizar
+la regla del Mikrotik con la IP nueva de la VM** (ver punto 4 de la sección
+anterior). El dominio `emiliomuller.com` está en Hostinger. Pasos completos en
+`docs/02-despliegue.md`.
 
-**3. La tarea programada de arranque.** Sin ella, tras un reinicio IIS vuelve
-solo pero el API no. Está documentada en `docs/02-despliegue.md`. **No usar
-`pm2-windows-startup`**: escribe en la clave `Run` del registro, que necesita que
-alguien inicie sesión.
+**3. El arranque automático.** En Ubuntu esto ya no necesita una tarea
+programada a mano ni un script propio: `pm2 startup systemd` genera un
+servicio de systemd que corre `pm2 resurrect` al reiniciar, y `pm2 save`
+guarda la lista de procesos. Documentado en `docs/02-despliegue.md`.
 
 **4. Los tres reportes.** Facturación Total, Resumen de Servicios y Ranking de
 Ventas, con descarga en PDF. El ranking ya sale de `sp_consultaRankingVentas`; los
@@ -138,6 +151,15 @@ que se armó con el dueño.
 ## 8. Los errores que ya pagamos
 
 Cada uno costó tiempo real. Están acá para no repetirlos.
+
+**Nota (22/09/2026), con pc-servicios pasando a Ubuntu:** de la lista de abajo,
+el `EPERM` de `argon2`, el `$ErrorActionPreference` y los *junctions* de npm
+eran específicos de Windows y no aplican en pc-servicios una vez migrado
+(`scripts/publicar.sh` es la versión Ubuntu de `publicar.ps1`, con el mismo
+cuidado de comprobar el código de salida de cada paso externo). Lo demás —el
+proceso `online` que no escucha, `npx` descargando de más, el alias al fuente
+de `shared`, la compatibilidad con SQL Server 2008 R2, el TLS 1.0— es del
+proyecto, no del sistema operativo, y sigue igual.
 
 **El proceso `online` que no escucha.** Si cualquier `onModuleInit` lanza, Nest
 aborta el arranque, pero los `setInterval` ya registrados mantienen vivo al
@@ -202,12 +224,14 @@ cada guarda a propósito, no se sabe si sirve.
 ## 9. Accesos que hacen falta
 
 - El repositorio `ninofer/webTodoHierro`.
-- **pc-servicios**: para publicar, pm2 e IIS.
+- **pc-servicios**: acceso SSH, para publicar, pm2 y nginx.
+- **El Mikrotik**, para la regla que deja pasar a pc-servicios hacia el SQL del
+  cliente (y para actualizarla si la VM cambia de IP).
 - **La VPN de TREEKINGS**, para alcanzar el SQL del cliente.
 - **Radmin**, si hay que entrar al servidor del cliente. Es el acceso que usa el
   dueño hoy.
 - La contraseña del login `web_ro`. No está en el repositorio ni debe estarlo. El
-  `.env` de producción ya está en `C:\todohierro` y no se versiona.
+  `.env` de producción ya está en `pc-servicios` y no se versiona.
 - Acceso a Hostinger, para el DNS de `emiliomuller.com`.
 
 ## 10. Una cosa sobre el método
