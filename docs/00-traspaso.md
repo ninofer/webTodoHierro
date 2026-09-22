@@ -46,7 +46,7 @@ máquinas no se pueden endurecer más de lo que están.
 | Máquina | Qué es | Carpeta | Se toca |
 |---|---|---|---|
 | **NINOFERHP** | La máquina de desarrollo | `C:\Fuentes\IA\webTodoHierro` | Sí |
-| **pc-servicios** | Servidor de aplicación (Ubuntu), en el cluster Proxmox de TREEKINGS | `~/todohierro` (por SSH, no hay escritorio) | Sí |
+| **pc-servicios** | Servidor de aplicación (Ubuntu), en el cluster Proxmox de TREEKINGS | `/home/sistema/webTodoHierro` (por SSH, no hay escritorio) | Sí |
 | **SRVTodoHierro** | La PC del cliente, con el SQL y el sistema VB | — | **No** |
 
 `NINOFERHP` y `pc-servicios` son **dos clones del mismo repositorio**. No se
