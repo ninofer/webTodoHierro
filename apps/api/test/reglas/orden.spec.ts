@@ -52,6 +52,26 @@ describe('regla: orden del catálogo', () => {
     expect(datos.map((a) => a.codigo)).toEqual(['9', '25', '100', '300']);
   });
 
+  it('el nombre se busca en cualquier parte, y el orden sigue siendo sólo por código', async () => {
+    const servicio = await servicioCon([
+      articulo('500', 'CAÑO NEGRO 2"'),
+      articulo('40', 'TUBO CAÑO GALV'),
+      articulo('7', 'CODO P/CAÑO'),
+      articulo('300', 'CAÑO NEGRO 1"'),
+      articulo('2', 'ALAMBRE'),
+    ]);
+
+    // Con LIKE 'CAÑO%' sólo saldrían 300 y 500. Los caños negros no van
+    // agrupados arriba: mandan los códigos 7 y 40 aunque su nombre no empiece
+    // con CAÑO.
+    expect(servicio.buscar('caño', 1, 50).datos.map((a) => a.codigo)).toEqual([
+      '7',
+      '40',
+      '300',
+      '500',
+    ]);
+  });
+
   it('con el mismo código, el orden lo desempata la lista de precio', async () => {
     const servicio = await servicioCon([articulo('5', 'CAÑO', 3), articulo('5', 'CAÑO', 1)]);
     expect(servicio.buscar('', 1, 50).datos.map((a) => a.tipoPrecio)).toEqual([1, 3]);

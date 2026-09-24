@@ -141,7 +141,9 @@ export class CatalogoService implements OnModuleInit {
   private filtrar(modo: ModoBusqueda, aguja: string): ArticuloIndexado[] {
     switch (modo) {
       case 'nombre':
-        return this.articulos.filter((a) => a._nombre.startsWith(aguja));
+        // LIKE '%texto%', no 'texto%' como el sistema de escritorio: "CAÑO" tiene
+        // que traer también "TUBO CAÑO ..." y "CODO P/CAÑO ...". Pedido del dueño.
+        return this.articulos.filter((a) => a._nombre.includes(aguja));
       case 'codigo':
         return this.articulos.filter((a) => a._codigo.startsWith(aguja));
       case 'barra':

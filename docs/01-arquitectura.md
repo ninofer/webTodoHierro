@@ -127,9 +127,12 @@ La búsqueda replica el criterio de `frmConsultaPrecio.vb`:
 
 | Lo que se escribe | Cómo se busca |
 |---|---|
-| No empieza con número | `nombre LIKE 'texto%'` |
+| No empieza con número | `nombre LIKE '%texto%'` (el escritorio usa `'texto%'`; la web busca en cualquier parte del nombre, a pedido del dueño) |
 | Numérico, hasta 6 caracteres | `codigo LIKE 'texto%'` |
 | Numérico, más largo | `codigo_barra LIKE 'texto%'` |
+
+El resultado sale siempre ordenado por código de menor a mayor, sin importar
+el nombre (`compararCodigos`, en `packages/shared`).
 
 Esa regla la deciden la pantalla y el servidor, así que vive en
 `packages/shared`.
