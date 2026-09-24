@@ -27,3 +27,14 @@ export function modoDeBusqueda(texto: string): ModoBusqueda {
 export function normalizarBusqueda(texto: string): string {
   return texto.trim().slice(0, LIMITES.LARGO_MAXIMO_BUSQUEDA);
 }
+
+/**
+ * Orden del catálogo: por código de menor a mayor.
+ *
+ * Los códigos son texto ("9", "10", "176A"), y un orden alfabético pondría "10"
+ * antes que "9". `numeric` compara los tramos de dígitos como números, que es lo
+ * que el usuario entiende por "de menor a mayor".
+ */
+export function compararCodigos(a: string, b: string): number {
+  return a.localeCompare(b, 'es', { numeric: true, sensitivity: 'base' });
+}

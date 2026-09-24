@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import {
+  compararCodigos,
   filasASaltear,
   modoDeBusqueda,
   normalizarBusqueda,
@@ -77,8 +78,10 @@ export class CatalogoService implements OnModuleInit {
         _codigoBarra: a.codigoBarra.toUpperCase(),
       }));
 
+      // Se ordena una sola vez al cargar: filtrar conserva el orden, así que
+      // cualquier búsqueda ("caño", un código, todo) sale por código ascendente.
       indexados.sort(
-        (a, b) => a._nombre.localeCompare(b._nombre, 'es') || a.tipoPrecio - b.tipoPrecio,
+        (a, b) => compararCodigos(a.codigo, b.codigo) || a.tipoPrecio - b.tipoPrecio,
       );
 
       this.articulos = indexados;
