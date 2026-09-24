@@ -54,9 +54,9 @@ export class AuthController {
     respuesta.cookie(COOKIE_SESION, this.auth.firmar(usuario), {
       httpOnly: true,
       sameSite: 'lax',
-      // En producción el portal va por HTTPS detrás de IIS. En desarrollo, sobre
-      // http://127.0.0.1, una cookie `secure` no se guardaría.
-      secure: process.env['NODE_ENV'] === 'production',
+      // Con `secure`, el navegador descarta la cookie si el sitio va por HTTP y el
+      // login "entra y vuelve a pedir usuario". Se activa sólo cuando hay HTTPS.
+      secure: process.env['COOKIE_SEGURA'] === 'true',
       path: '/',
       maxAge: this.auth.horasDeVida * 3600 * 1000,
     });
