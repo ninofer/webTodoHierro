@@ -1,9 +1,8 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { LIMITES, formatearAntiguedad } from '@todohierro/shared';
 import { buscarArticulos } from '../api/catalogo';
-import { quienSoy, salir } from '../api/sesion';
+import { BotonMenu } from '../componentes/Disposicion';
 import { TarjetaArticulo } from '../componentes/TarjetaArticulo';
 
 const ESPERA_ANTES_DE_BUSCAR_MS = 220;
@@ -11,16 +10,12 @@ const ESPERA_ANTES_DE_BUSCAR_MS = 220;
 export function Articulos() {
   const [texto, setTexto] = useState('');
   const [busqueda, setBusqueda] = useState('');
-  const navegar = useNavigate();
-  const cache = useQueryClient();
 
   // Se espera a que deje de tipear: sin esto, cada tecla es una petición.
   useEffect(() => {
     const temporizador = setTimeout(() => setBusqueda(texto), ESPERA_ANTES_DE_BUSCAR_MS);
     return () => clearTimeout(temporizador);
   }, [texto]);
-
-  const sesion = useQuery({ queryKey: ['sesion'], queryFn: quienSoy, retry: false });
 
   const consulta = useInfiniteQuery({
     queryKey: ['articulos', busqueda],
@@ -33,14 +28,6 @@ export function Articulos() {
     retry: false,
   });
 
-  const cerrarSesion = useMutation({
-    mutationFn: salir,
-    onSuccess: () => {
-      cache.clear();
-      navegar('/login', { replace: true });
-    },
-  });
-
   const paginas = consulta.data?.pages ?? [];
   const articulos = paginas.flatMap((p) => p.datos);
   const total = paginas[0]?.total ?? 0;
@@ -49,17 +36,10 @@ export function Articulos() {
   return (
     <div className="mx-auto min-h-dvh max-w-3xl">
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] dark:border-slate-800 dark:bg-slate-900">
-        <div className="mb-3 flex items-center gap-3">
+        {/* El nombre del usuario y Salir pasaron a la barra lateral. */}
+        <div className="mb-3 flex items-center gap-2">
+          <BotonMenu />
           <span className="flex-1 text-sm font-semibold">Precios y stock</span>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            {sesion.data?.nombre ?? ''}
-          </span>
-          <button
-            onClick={() => cerrarSesion.mutate()}
-            className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-600 dark:border-slate-700 dark:text-slate-400"
-          >
-            Salir
-          </button>
         </div>
 
         <input

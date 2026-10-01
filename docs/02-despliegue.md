@@ -137,8 +137,16 @@ node deploy/crear-usuario.js
 chmod 600 usuarios.json
 ```
 
-Pide usuario, contraseña (mínimo 10 caracteres) y nombre real. La contraseña
-se escribe en la consola del servidor, no en ningún otro lado.
+Pide usuario, contraseña (mínimo 10 caracteres), nombre real e `idUsuario`: el
+número de ese usuario en el sistema de escritorio (`v_usuario.idUsuario`). La
+contraseña se escribe en la consola del servidor, no en ningún otro lado.
+
+También pregunta si el usuario ve reportes (`"reportes": true`), que muestran
+toda la facturación. Ver `docs/14-reportes.md`.
+
+Para poder entrar, ese `idUsuario` tiene que estar además en la tabla
+`usuarioWeb` del sistema. Si no está, el login responde «Tu usuario no está
+habilitado para la web». Ver `docs/13-presupuestos.md`.
 
 ### Tarea 6 de 9 — pm2 y el arranque automático
 

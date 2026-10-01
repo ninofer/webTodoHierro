@@ -43,6 +43,17 @@ export interface RespuestaArticulos {
 
 /** Usuario del portal, tal como viaja en el token. */
 export interface UsuarioSesion {
+  /**
+   * Usuario del sistema de escritorio (`v_usuario.idUsuario`). Es con el que la
+   * base separa el carrito de cada uno en `detFacturacionTmp` y el que queda como
+   * autor del presupuesto. Sale del padrón, nunca del navegador.
+   */
+  idUsuario: number;
   nick: string;
   nombre: string;
+  /**
+   * Puede ver los reportes de ventas. Es toda la facturación del negocio: por
+   * defecto no, y se habilita usuario por usuario en el padrón.
+   */
+  reportes: boolean;
 }

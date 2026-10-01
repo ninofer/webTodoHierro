@@ -59,15 +59,28 @@ El API entra con el login `web_ro`, creado para este proyecto:
 GRANT SELECT  ON SCHEMA::web TO web_ro;
 GRANT EXECUTE ON SCHEMA::web TO web_ro;
 DENY  INSERT, UPDATE, DELETE, ALTER ON SCHEMA::web TO web_ro;
-DENY  SELECT ON SCHEMA::dbo TO web_ro;
+DENY  INSERT, UPDATE, DELETE, ALTER ON SCHEMA::dbo TO web_ro;   -- desde db/002
+-- más los GRANT objeto por objeto de db/002-permisos-presupuesto.sql
 ```
+
+**Cambió con el módulo de presupuestos (29/09/2026).** Hasta entonces había
+también `DENY SELECT ON SCHEMA::dbo`. Un DENY de esquema le gana a cualquier GRANT
+de objeto, así que para que la web ejecute los SP del presupuesto hubo que
+retirarlo y reemplazarlo por `GRANT` puntuales: `EXECUTE` sobre cada SP y `SELECT`
+sobre cada tabla o vista, **columna por columna** donde hay costos. El detalle y el
+motivo están en `docs/13-presupuestos.md`.
+
+La escritura sigue sin estar permitida sobre ninguna tabla: la hacen los SP del
+cliente por encadenamiento de propiedad. Un INSERT directo del API falla.
 
 `web_ro` no pertenece a ningún rol de servidor ni de base más allá de `public`.
 Verificado: lee `web.vw_articulos` y falla al intentar `SELECT` sobre
 `dbo.producto`.
 
-El `DENY` sobre `dbo` es la red de seguridad contra el futuro: aunque alguien
-agregue ese usuario a `db_datareader` por error, el `DENY` le gana al `GRANT`.
+El `DENY` de escritura sobre `dbo` es la red de seguridad contra el futuro:
+aunque alguien agregue ese usuario a `db_datawriter` por error, el `DENY` le gana.
+La de lectura ya no existe: si alguien lo agrega a `db_datareader`, `web_ro`
+pasa a leer todo `dbo`, costos incluidos. **No agregarlo a ningún rol.**
 
 **Lo que nunca cruza**: `costo`, `costoAnterior`, `precio2` y `comisionCanje`.
 El costo de compra es el dato más sensible de esa base y ninguna pantalla lo
@@ -120,6 +133,16 @@ deniega.
 
 El padrón del portal vive en `pc-servicios`, con hash argon2. Son pocos usuarios
 —los dueños— así que el costo es una contraseña distinta, que además es deseable.
+
+Desde el módulo de presupuestos, cada usuario del padrón lleva su `idUsuario` del
+sistema de escritorio, y para entrar tiene que estar además en la tabla
+`usuarioWeb` del cliente. Se comprueba al entrar y antes de cada operación del
+presupuesto, con una caché de un minuto: si en el sistema se le saca la
+habilitación, deja de poder operar sin esperar a que venza el JWT.
+
+`sp_usuarioPassWeb`, que el cliente creó para validar contra sus propias claves,
+**no se usa**: descifra con `decryptbycert`, que exige `CONTROL` sobre el
+certificado, y dárselo a `web_ro` le permitiría descifrar las claves de todos.
 
 ## 7. Lo que se toma del sistema de escritorio
 

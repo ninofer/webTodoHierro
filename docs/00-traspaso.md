@@ -82,7 +82,10 @@ que el motivo salte a la vista (el timeout de conexión tarda en avisar).
 ## 5. La frontera en la base
 
 El API entra con el login `web_ro`, que tiene `GRANT SELECT, EXECUTE` sobre el
-esquema `web` y `DENY SELECT` sobre `dbo`. No pertenece a ningún rol de servidor.
+esquema `web`, `DENY INSERT, UPDATE, DELETE, ALTER` sobre `dbo` y, desde el módulo
+de presupuestos, permisos objeto por objeto sobre lo que ese módulo usa de `dbo`
+(`db/002-permisos-presupuesto.sql`, `docs/13-presupuestos.md`). No pertenece a
+ningún rol de servidor ni de base.
 
 Todo lo que el API consulta pasa por vistas publicadas en `web`
 (`db/001-esquema-web.sql`). Si hace falta una tabla nueva, **se publica una vista,

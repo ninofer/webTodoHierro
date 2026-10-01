@@ -50,15 +50,24 @@ que explica de dónde salió cada regla.
 > La base del cliente es producción viva: ahí se está facturando mientras la web
 > consulta.
 
-- **A `todoHierro` se la lee, nunca se le escribe.** Ni datos, ni objetos, con
-  una única excepción documentada más abajo.
-- **El esquema `web` es la única superficie que este proyecto crea en producción.**
-  Sus objetos (vistas y procedimientos de lectura) viven versionados en `db/`, se
-  aplican con revisión, y ningún otro script del repositorio crea, altera ni
+- **A `todoHierro` no se le escribe directo.** Ni un INSERT, UPDATE ni DELETE
+  desde el API ni desde un script del repositorio.
+- **La única escritura es el módulo de presupuestos**, y sólo ejecutando los SP
+  del cliente (`dbo.sp_..._web`, los crea y mantiene el cliente), siempre con el
+  idConfig 999 y el `idUsuario` de la sesión. Ver
+  [`docs/13-presupuestos.md`](docs/13-presupuestos.md).
+- **Lo que este proyecto crea en producción** vive versionado en `db/` y se aplica
+  con revisión: las vistas del esquema `web` (`001`) y los permisos de `web_ro`
+  (`002` presupuestos, `003` reportes). Ningún otro script crea, altera ni
   escribe nada en esa base.
-- El API entra **sólo** con el login `web_ro`, que tiene `GRANT SELECT, EXECUTE`
-  sobre el esquema `web` y `DENY SELECT` sobre `dbo`. Si una consulta necesita una
-  tabla nueva, se publica una vista en `web`; no se amplía el permiso.
+- **Los reportes** (`docs/14-reportes.md`) sólo leen, y sólo los ve quien tiene
+  `"reportes": true` en el padrón: los protege `ReportesGuard` en el API.
+- El API entra **sólo** con el login `web_ro`. Tiene `GRANT SELECT, EXECUTE` sobre
+  `web`, `DENY INSERT, UPDATE, DELETE, ALTER` sobre `dbo`, y permisos **objeto por
+  objeto** (y columna por columna) sobre lo que el presupuesto usa de `dbo`. La
+  lista de `db/002` y la del código son la misma: la guarda `sp-autorizados` las
+  compara. Un objeto nuevo se agrega en los dos lados; nunca se da un permiso de
+  esquema ni se agrega `web_ro` a un rol.
 - **El motor es SQL Server 2008 R2.** No existe `OFFSET ... FETCH` (la paginación
   va con `ROW_NUMBER()`), ni `STRING_AGG`, ni `TRY_CONVERT`, ni `IIF`. La guarda
   `sql-compatibilidad` lo vigila.
@@ -70,8 +79,8 @@ que explica de dónde salió cada regla.
 ## Lo que no se hace
 
 - No correr `npm audit fix --force`.
-- No commitear `.env`, certificados, `usuarios.json` ni claves. Las contraseñas no
-  viajan por el chat: las escribe el usuario en su consola.
+- No commitear `.env`, certificados, `usuarios.json`, `presupuestoEjemplo.pdf` ni
+  claves. Las contraseñas no viajan por el chat: las escribe el usuario en su consola.
 - No probar sobre producción cuando hay alternativa.
 - No exponer nunca `costo`, `costoAnterior` ni `precio2` de la base del cliente.
   Es el dato más sensible que tiene y ninguna pantalla lo necesita.
@@ -86,7 +95,8 @@ que explica de dónde salió cada regla.
 - Base del cliente: `todoHierro`, SQL Server 2008 R2 sobre Windows Server 2012 R2
   en Encarnación, alcanzada por OpenVPN terminada en el Mikrotik.
 - Producción: pc-servicios corre Ubuntu. pm2 (`todohierro-api`, **una sola
-  instancia** — el worker de caché corre dentro del proceso) detrás de nginx.
+  instancia** — el worker de caché corre dentro del proceso, y el candado que
+  numera los presupuestos también) detrás de nginx.
   Tras tocar `.env`: `pm2 restart todohierro-api --update-env`.
 - **El API escucha en `127.0.0.1`.** nginx es el único camino hacia él.
 - `NODE_OPTIONS=--tls-min-v1.0`, porque SQL Server 2008 R2 cifra el login con

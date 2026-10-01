@@ -6,8 +6,10 @@ import { archivosCon, leer, relativa, sinComentariosSql, sinComentariosTs } from
  * Barre todo el repositorio, no sólo db/: el día que alguien escriba un INSERT
  * en un servicio del API, esta guarda tiene que verlo igual.
  *
- * La única excepción documentada es el esquema `web`, y sólo para crear objetos
- * de lectura. Ver CLAUDE.md y db/README.md.
+ * Las excepciones documentadas: el esquema `web`, sólo para crear objetos de
+ * lectura, y los GRANT de db/002. El presupuesto escribe, pero ejecutando los SP
+ * del cliente, nunca con un INSERT propio: eso lo vigila sp-autorizados.
+ * Ver CLAUDE.md y db/README.md.
  */
 
 const ESCRITURAS = [

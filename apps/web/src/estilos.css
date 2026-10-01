@@ -17,3 +17,20 @@
     font-size: 16px;
   }
 }
+
+/*
+ * Colores de los gráficos. Todos son de una sola serie: un solo tono (slot 1 de
+ * la paleta de referencia), validado contra la superficie de cada modo con el
+ * validador de la guía de visualización. El texto nunca usa el color de la
+ * serie: va en los grises de texto de siempre.
+ */
+:root {
+  --serie-1: #2a78d6;
+  --grilla: #e2e8f0;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --serie-1: #3987e5;
+    --grilla: #1e293b;
+  }
+}

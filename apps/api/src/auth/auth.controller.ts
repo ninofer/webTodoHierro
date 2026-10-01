@@ -14,6 +14,7 @@ import type { Request, Response } from 'express';
 import type { UsuarioSesion } from '@todohierro/shared';
 import { AuthService } from './auth.service';
 import { FrenoLoginService } from './freno-login.service';
+import { HabilitacionService } from './habilitacion.service';
 import { COOKIE_SESION } from './jwt.strategy';
 import { LoginDto } from './dto/login.dto';
 import { Publico } from './publico.decorador';
@@ -25,6 +26,7 @@ export class AuthController {
     private readonly usuarios: UsuariosService,
     private readonly auth: AuthService,
     private readonly freno: FrenoLoginService,
+    private readonly habilitacion: HabilitacionService,
   ) {}
 
   @Publico()
@@ -50,6 +52,10 @@ export class AuthController {
     }
 
     this.freno.limpiar(ip);
+
+    // La clave es correcta, pero la habilitación la decide el sistema del cliente.
+    // Va después de verificar la clave: antes, le diría a cualquiera qué nicks existen.
+    await this.habilitacion.exigir(usuario.idUsuario);
 
     respuesta.cookie(COOKIE_SESION, this.auth.firmar(usuario), {
       httpOnly: true,

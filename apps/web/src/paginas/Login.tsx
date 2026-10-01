@@ -31,7 +31,7 @@ export function Login() {
       >
         <h1 className="text-center text-xl font-bold">Todo Hierro</h1>
         <p className="mb-7 mt-1 text-center text-sm text-slate-500 dark:text-slate-400">
-          Consulta de precios y stock
+          Precios, stock y presupuestos
         </p>
 
         <label htmlFor="nick" className="mb-1.5 block text-xs text-slate-500 dark:text-slate-400">

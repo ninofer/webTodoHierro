@@ -5,9 +5,17 @@ consulta. La regla del repositorio es **se la lee, nunca se le escribe**.
 
 Estos scripts son la única excepción, y está acotada:
 
-- Sólo crean objetos de **lectura** (vistas y, si hiciera falta, procedimientos
-  que sólo consultan) dentro del esquema `web`.
-- No tocan `dbo`, no modifican tablas, no insertan ni actualizan datos.
+- `001` crea objetos de **lectura** (vistas) dentro del esquema `web`.
+- `002` sólo da y quita **permisos** a `web_ro` para el módulo de presupuestos:
+  `EXECUTE` sobre los SP `_web` del cliente y `SELECT` objeto por objeto, y
+  columna por columna donde la tabla tiene costos. No crea objetos ni toca datos.
+  La escritura del presupuesto la hacen esos SP por encadenamiento de propiedad;
+  `web_ro` sigue con `DENY INSERT, UPDATE, DELETE` sobre `dbo`.
+- `003` da `EXECUTE` sobre los dos SP de los reportes de ventas, que sólo leen.
+  Ver `docs/14-reportes.md`.
+- Ningún script modifica tablas, inserta ni actualiza datos.
+- Los SP `_web` **no están acá**: los creó y los mantiene el cliente, como el
+  resto de su sistema. Ver `docs/13-presupuestos.md`.
 - Cada uno comprueba en qué base está parado antes de hacer nada.
 - Van con BOM UTF-8 y CRLF, para que SSMS no rompa los acentos.
 

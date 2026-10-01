@@ -138,6 +138,15 @@ export class CatalogoService implements OnModuleInit {
     };
   }
 
+  /**
+   * Un artículo por id, desde la caché. Lo usa el presupuesto para el nombre y el
+   * stock del aviso; el precio del renglón lo calcula la base, no esto.
+   */
+  porId(id: number): Articulo | undefined {
+    const encontrado = this.articulos.find((a) => a.id === id);
+    return encontrado ? desindexar(encontrado) : undefined;
+  }
+
   private filtrar(modo: ModoBusqueda, aguja: string): ArticuloIndexado[] {
     switch (modo) {
       case 'nombre':

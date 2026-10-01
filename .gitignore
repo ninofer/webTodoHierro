@@ -20,3 +20,6 @@ Thumbs.db
 
 # Artefactos incrementales de tsc
 *.tsbuildinfo
+
+# Ejemplo de presupuesto del escritorio: tiene datos reales de un cliente
+presupuestoEjemplo.pdf

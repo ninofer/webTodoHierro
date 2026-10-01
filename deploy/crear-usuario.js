@@ -34,11 +34,23 @@ async function principal() {
   const nick = (await consola.question('Usuario     : ')).trim().toLowerCase();
   const clave = await consola.question('Contrasena  : ');
   const nombre = (await consola.question('Nombre real : ')).trim();
+  // Es el número de usuario del sistema de escritorio: con él la base separa el
+  // carrito de cada uno. Tiene que estar además en la tabla usuarioWeb.
+  const idUsuarioTexto = (await consola.question('idUsuario del sistema : ')).trim();
+  // Los reportes muestran toda la facturación: sólo a quien corresponda.
+  const reportesTexto = (await consola.question('¿Ve reportes? (s/n)  : ')).trim().toLowerCase();
   consola.close();
 
   if (nick.length < 3) throw new Error('El usuario necesita al menos 3 caracteres.');
   if (clave.length < 10) throw new Error('La contraseña necesita al menos 10 caracteres.');
   if (nombre.length === 0) throw new Error('Falta el nombre real, que es lo que se muestra en pantalla.');
+  const idUsuario = Number(idUsuarioTexto);
+  if (!Number.isInteger(idUsuario) || idUsuario <= 0) {
+    throw new Error(
+      `"${idUsuarioTexto}" no es un idUsuario válido. Buscalo en el sistema (v_usuario.idUsuario) ` +
+        'y confirmá que esté en la tabla usuarioWeb.',
+    );
+  }
 
   const padron = existsSync(ruta) ? JSON.parse(readFileSync(ruta, 'utf8')) : [];
   if (padron.some((u) => u.nick === nick)) {
@@ -48,6 +60,8 @@ async function principal() {
   padron.push({
     nick,
     nombre,
+    idUsuario,
+    reportes: reportesTexto === 's',
     hash: await argon2.hash(clave, { type: argon2.argon2id }),
     alta: new Date().toISOString(),
   });
@@ -55,6 +69,7 @@ async function principal() {
   writeFileSync(ruta, JSON.stringify(padron, null, 2), 'utf8');
   console.log(`Usuario "${nick}" creado en ${ruta}. Total en el padrón: ${padron.length}`);
   console.log('El API relee el padrón al reiniciar: pm2 restart todohierro-api');
+  console.log(`Para que pueda entrar, el idUsuario ${idUsuario} tiene que estar en la tabla usuarioWeb.`);
 }
 
 principal().catch((error) => {

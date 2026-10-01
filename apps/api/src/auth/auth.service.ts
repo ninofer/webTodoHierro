@@ -16,7 +16,7 @@ export class AuthService {
 
   firmar(usuario: UsuarioSesion): string {
     return this.jwt.sign(
-      { sub: usuario.nick, nombre: usuario.nombre },
+      { sub: usuario.nick, nombre: usuario.nombre, uid: usuario.idUsuario, rep: usuario.reportes },
       { expiresIn: `${this.horasDeVida}h` },
     );
   }

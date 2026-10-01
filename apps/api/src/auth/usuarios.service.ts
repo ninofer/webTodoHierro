@@ -2,12 +2,47 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { readFileSync } from 'node:fs';
 import * as argon2 from 'argon2';
+import type { UsuarioSesion } from '@todohierro/shared';
 
 /** Un usuario del portal, tal como está en el archivo del padrón. */
 interface UsuarioGuardado {
   nick: string;
   nombre: string;
   hash: string;
+  /** Su usuario del sistema de escritorio. Ver UsuarioSesion.idUsuario. */
+  idUsuario: number;
+  /** Opcional en el archivo; si falta, no ve reportes. */
+  reportes: boolean;
+}
+
+/**
+ * Valida el padrón al cargarlo. Un usuario sin `idUsuario` no puede hacer
+ * presupuestos, y si se lo deja entrar, el primer intento falla contra la base con
+ * un error que no dice qué pasa. Mejor que la carga falle ahora, nombrando a quién.
+ */
+export function validarPadron(leidos: unknown): UsuarioGuardado[] {
+  if (!Array.isArray(leidos)) {
+    throw new Error('El padrón tiene que ser una lista de usuarios.');
+  }
+  return leidos.map((u: Partial<UsuarioGuardado>, i) => {
+    const nick = typeof u.nick === 'string' ? u.nick.toLowerCase() : '';
+    if (nick === '' || typeof u.hash !== 'string' || typeof u.nombre !== 'string') {
+      throw new Error(`El usuario número ${i + 1} del padrón no tiene nick, nombre o hash.`);
+    }
+    if (!Number.isInteger(u.idUsuario) || (u.idUsuario as number) <= 0) {
+      throw new Error(
+        `El usuario "${nick}" no tiene un idUsuario válido (se leyó ${JSON.stringify(u.idUsuario)}). ` +
+          'Agregale "idUsuario" con su número de usuario del sistema de escritorio.',
+      );
+    }
+    if (u.reportes !== undefined && typeof u.reportes !== 'boolean') {
+      // "reportes": "si" pasaría como verdadero en cualquier if descuidado.
+      throw new Error(
+        `El usuario "${nick}" tiene "reportes": ${JSON.stringify(u.reportes)}. Tiene que ser true, false o no estar.`,
+      );
+    }
+    return { nick, nombre: u.nombre, hash: u.hash, idUsuario: u.idUsuario as number, reportes: u.reportes === true };
+  });
 }
 
 /**
@@ -15,8 +50,11 @@ interface UsuarioGuardado {
  *
  * Vive en pc-servicios, NO en la base del cliente. El sistema de escritorio
  * guarda sus contraseñas cifradas con un certificado de SQL Server —cifrado
- * reversible, no hash— y validar contra él exigiría EXECUTE sobre un objeto de
- * dbo, justo lo que el login web_ro deniega. Ver docs/01-arquitectura.md, punto 6.
+ * reversible, no hash— y validar contra él exigiría darle a web_ro CONTROL sobre
+ * ese certificado. Ver docs/01-arquitectura.md, punto 6.
+ *
+ * La clave es de la web; la habilitación la decide el sistema del cliente
+ * (tabla usuarioWeb, ver HabilitacionService).
  */
 @Injectable()
 export class UsuariosService implements OnModuleInit {
@@ -44,8 +82,7 @@ export class UsuariosService implements OnModuleInit {
     const ruta = this.config.getOrThrow<string>('USUARIOS_ARCHIVO');
     try {
       const crudo = readFileSync(ruta, 'utf8');
-      const leidos = JSON.parse(crudo) as UsuarioGuardado[];
-      this.usuarios = leidos.map((u) => ({ ...u, nick: u.nick.toLowerCase() }));
+      this.usuarios = validarPadron(JSON.parse(crudo));
       this.log.log(`Padrón cargado: ${this.usuarios.length} usuarios`);
     } catch (error) {
       const detalle = error instanceof Error ? error.message : String(error);
@@ -62,7 +99,7 @@ export class UsuariosService implements OnModuleInit {
    * Siempre corre argon2.verify, exista el usuario o no, para que el tiempo de
    * respuesta no delate qué nicks están dados de alta.
    */
-  async verificar(nick: string, clave: string): Promise<{ nick: string; nombre: string } | null> {
+  async verificar(nick: string, clave: string): Promise<UsuarioSesion | null> {
     const buscado = nick.trim().toLowerCase();
     const usuario = this.usuarios.find((u) => u.nick === buscado);
     const hash = usuario?.hash ?? this.hashSenuelo;
@@ -75,6 +112,6 @@ export class UsuariosService implements OnModuleInit {
     }
 
     if (!usuario || !coincide) return null;
-    return { nick: usuario.nick, nombre: usuario.nombre };
+    return { idUsuario: usuario.idUsuario, nick: usuario.nick, nombre: usuario.nombre, reportes: usuario.reportes };
   }
 }

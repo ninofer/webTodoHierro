@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -21,6 +21,10 @@ function desdeCookie(req: Request): string | null {
 interface Carga {
   sub: string;
   nombre: string;
+  /** idUsuario del escritorio. Los tokens de antes del módulo de presupuestos no lo tienen. */
+  uid?: number;
+  /** Permiso de reportes. Sólo `true` literal habilita. */
+  rep?: boolean;
 }
 
 @Injectable()
@@ -34,6 +38,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   validate(carga: Carga): UsuarioSesion {
-    return { nick: carga.sub, nombre: carga.nombre };
+    if (!Number.isInteger(carga.uid)) {
+      throw new UnauthorizedException('Tu sesión es de una versión anterior del portal: volvé a ingresar.');
+    }
+    return { idUsuario: carga.uid as number, nick: carga.sub, nombre: carga.nombre, reportes: carga.rep === true };
   }
 }

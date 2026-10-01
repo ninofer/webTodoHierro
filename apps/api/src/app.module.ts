@@ -5,6 +5,8 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
 import { JwtGuard } from './auth/jwt.guard';
 import { CatalogoModule } from './catalogo/catalogo.module';
+import { PresupuestoModule } from './presupuesto/presupuesto.module';
+import { ReportesModule } from './reportes/reportes.module';
 import { SaludModule } from './salud/salud.module';
 import { SqlModule } from './sql/sql.module';
 
@@ -20,6 +22,8 @@ import { SqlModule } from './sql/sql.module';
     SqlModule,
     AuthModule,
     CatalogoModule,
+    PresupuestoModule,
+    ReportesModule,
     SaludModule,
   ],
   providers: [
